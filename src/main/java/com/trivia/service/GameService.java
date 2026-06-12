@@ -72,4 +72,14 @@ public class GameService {
             );
         }
     }
+    public String generateReport(String playerName, int score) {
+    String level = "Básico";
+    if (score > 50) level = "Intermedio";
+    if (score > 80) level = "Avanzado";
+    if (score > 100) level = "Experto";
+    if (score > 150) level = "Master";
+    if (score > 200) level = "Leyenda";
+    if (score > 300) level = "Inmortal";
+    return "Reporte de " + playerName + ": Nivel " + level;
+}
 }
