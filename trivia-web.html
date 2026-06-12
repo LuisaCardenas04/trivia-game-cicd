@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 Trivia Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      padding: 20px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .banner {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .banner h1 {
+      font-size: 2.5em;
+      background: linear-gradient(90deg, #e94560, #0f3460);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 5px;
+    }
+
+    .banner p {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9em;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 15px;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 1em;
+      margin: 10px 0;
+      outline: none;
+    }
+
+    input[type="text"]::placeholder { color: rgba(255,255,255,0.4); }
+
+    input[type="text"]:focus { border-color: #e94560; }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 8px 0;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #e94560, #c23152);
+      color: white;
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(233,69,96,0.4); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.25); }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .category-btn {
+      padding: 15px;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.95em;
+    }
+
+    .category-btn:hover, .category-btn.selected {
+      border-color: #e94560;
+      background: rgba(233,69,96,0.2);
+    }
+
+    .progress-bar {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      height: 8px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e94560, #f5a623);
+      border-radius: 10px;
+      transition: width 0.5s;
+    }
+
+    .question-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.85em;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+
+    .badge-easy { background: rgba(46,213,115,0.3); color: #2ed573; }
+    .badge-medium { background: rgba(255,165,2,0.3); color: #ffa502; }
+    .badge-hard { background: rgba(255,71,87,0.3); color: #ff4757; }
+
+    .question-text {
+      font-size: 1.2em;
+      margin: 20px 0;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 10px; }
+
+    .option-btn {
+      padding: 15px 20px;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: white;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.95em;
+      transition: all 0.3s;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: #e94560;
+      background: rgba(233,69,96,0.15);
+      transform: translateX(5px);
+    }
+
+    .option-btn.correct {
+      border-color: #2ed573;
+      background: rgba(46,213,115,0.2);
+    }
+
+    .option-btn.wrong {
+      border-color: #ff4757;
+      background: rgba(255,71,87,0.2);
+    }
+
+    .option-btn:disabled { cursor: not-allowed; }
+
+    .feedback {
+      text-align: center;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      font-weight: bold;
+      font-size: 1.1em;
+      display: none;
+    }
+
+    .feedback.correct { background: rgba(46,213,115,0.2); color: #2ed573; }
+    .feedback.wrong { background: rgba(255,71,87,0.2); color: #ff4757; }
+
+    .score-display {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .score-number {
+      font-size: 4em;
+      font-weight: bold;
+      background: linear-gradient(90deg, #e94560, #f5a623);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .rank-badge {
+      display: inline-block;
+      padding: 8px 24px;
+      border-radius: 20px;
+      background: linear-gradient(90deg, #e94560, #c23152);
+      font-size: 1.1em;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .stat-box {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .stat-value { font-size: 1.8em; font-weight: bold; color: #f5a623; }
+    .stat-label { font-size: 0.75em; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+    h2 { margin-bottom: 20px; font-size: 1.4em; }
+    h3 { margin-bottom: 15px; color: rgba(255,255,255,0.8); }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="banner">
+      <h1>🎯 Trivia Game</h1>
+      <p>CI/CD con Jenkins + SonarQube</p>
+    </div>
+
+    <!-- PANTALLA 1: INICIO -->
+    <div id="screen-start" class="screen active">
+      <h2>¡Bienvenido!</h2>
+      <input type="text" id="player-name" placeholder="Ingresa tu nombre..." maxlength="20">
+      <div style="margin: 15px 0;">
+        <h3>Elige una categoría:</h3>
+        <div class="category-grid">
+          <button class="category-btn selected" onclick="selectCategory(this, 'todas')">🌍 Todas</button>
+          <button class="category-btn" onclick="selectCategory(this, 'Tecnología')">💻 Tecnología</button>
+          <button class="category-btn" onclick="selectCategory(this, 'Ciencia')">🔬 Ciencia</button>
+          <button class="category-btn" onclick="selectCategory(this, 'Geografía')">🗺️ Geografía</button>
+          <button class="category-btn" onclick="selectCategory(this, 'Historia')">📜 Historia</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startGame()">🚀 Comenzar Juego</button>
+    </div>
+
+    <!-- PANTALLA 2: PREGUNTA -->
+    <div id="screen-game" class="screen">
+      <div class="question-info">
+        <span id="question-counter">Pregunta 1/5</span>
+        <span id="score-counter">Puntos: 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:15px;">
+        <span class="badge" id="category-badge">Tecnología</span>
+        <span class="badge" id="difficulty-badge">EASY</span>
+        <span style="margin-left:auto; color:#f5a623; font-weight:bold;" id="points-badge">+10 pts</span>
+      </div>
+      <div class="question-text" id="question-text"></div>
+      <div class="options" id="options-container"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="btn btn-secondary" id="next-btn" onclick="nextQuestion()" style="display:none; margin-top:15px;">
+        Siguiente →
+      </button>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADO -->
+    <div id="screen-result" class="screen">
+      <div class="score-display">
+        <div style="font-size:1.1em; color:rgba(255,255,255,0.6); margin-bottom:10px;">Puntuación Final</div>
+        <div class="score-number" id="final-score">0</div>
+        <div>puntos</div>
+        <div class="rank-badge" id="final-rank">Novato</div>
+      </div>
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-value" id="stat-correct">0</div>
+          <div class="stat-label">Correctas</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-accuracy">0%</div>
+          <div class="stat-label">Precisión</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="restartGame()">🔄 Jugar de Nuevo</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const allQuestions = [
+    { text: "¿Qué significa el acrónimo CPU?", options: ["Central Processing Unit","Computer Personal Unit","Control Program Utility","Core Processing Utility"], correct: 0, category: "Tecnología", difficulty: "EASY", points: 10 },
+    { text: "¿En qué año fue fundada Apple Inc.?", options: ["1972","1976","1980","1984"], correct: 1, category: "Tecnología", difficulty: "MEDIUM", points: 20 },
+    { text: "¿Qué lenguaje creó Guido van Rossum?", options: ["Java","Ruby","Python","Perl"], correct: 2, category: "Tecnología", difficulty: "EASY", points: 10 },
+    { text: "¿Complejidad de QuickSort en el peor caso?", options: ["O(n log n)","O(n)","O(n²)","O(log n)"], correct: 2, category: "Tecnología", difficulty: "HARD", points: 30 },
+    { text: "¿Protocolo para transferir páginas web seguras?", options: ["FTP","HTTP","HTTPS","SMTP"], correct: 2, category: "Tecnología", difficulty: "EASY", points: 10 },
+    { text: "¿Símbolo químico del oro?", options: ["Go","Or","Au","Ag"], correct: 2, category: "Ciencia", difficulty: "EASY", points: 10 },
+    { text: "¿Velocidad de la luz en el vacío?", options: ["150,000 km/s","300,000 km/s","500,000 km/s","1,000,000 km/s"], correct: 1, category: "Ciencia", difficulty: "MEDIUM", points: 20 },
+    { text: "¿Cuántos huesos tiene el cuerpo humano adulto?", options: ["186","206","226","246"], correct: 1, category: "Ciencia", difficulty: "MEDIUM", points: 20 },
+    { text: "¿Quién formuló la teoría de la relatividad?", options: ["Isaac Newton","Nikola Tesla","Albert Einstein","Stephen Hawking"], correct: 2, category: "Ciencia", difficulty: "EASY", points: 10 },
+    { text: "¿Número atómico del carbono?", options: ["4","6","8","12"], correct: 1, category: "Ciencia", difficulty: "MEDIUM", points: 20 },
+    { text: "¿País más grande del mundo por superficie?", options: ["China","Estados Unidos","Rusia","Canadá"], correct: 2, category: "Geografía", difficulty: "EASY", points: 10 },
+    { text: "¿Capital de Australia?", options: ["Sídney","Melbourne","Brisbane","Canberra"], correct: 3, category: "Geografía", difficulty: "MEDIUM", points: 20 },
+    { text: "¿En qué continente está el río Nilo?", options: ["Asia","América del Sur","África","Europa"], correct: 2, category: "Geografía", difficulty: "EASY", points: 10 },
+    { text: "¿Océano más grande del planeta?", options: ["Atlántico","Índico","Ártico","Pacífico"], correct: 3, category: "Geografía", difficulty: "EASY", points: 10 },
+    { text: "¿Qué país tiene forma de bota?", options: ["España","Italia","Grecia","Portugal"], correct: 1, category: "Geografía", difficulty: "EASY", points: 10 },
+    { text: "¿En qué año llegó Colón a América?", options: ["1488","1492","1498","1502"], correct: 1, category: "Historia", difficulty: "EASY", points: 10 },
+    { text: "¿Cuánto duró la Primera Guerra Mundial?", options: ["2 años","4 años","6 años","8 años"], correct: 1, category: "Historia", difficulty: "MEDIUM", points: 20 },
+    { text: "¿Primer presidente de los Estados Unidos?", options: ["Abraham Lincoln","Thomas Jefferson","George Washington","John Adams"], correct: 2, category: "Historia", difficulty: "EASY", points: 10 },
+    { text: "¿En qué año cayó el Muro de Berlín?", options: ["1985","1987","1989","1991"], correct: 2, category: "Historia", difficulty: "MEDIUM", points: 20 },
+    { text: "¿Qué civilización construyó Machu Picchu?", options: ["Maya","Azteca","Inca","Olmeca"], correct: 2, category: "Historia", difficulty: "MEDIUM", points: 20 },
+  ];
+
+  let selectedCategory = 'todas';
+  let questions = [];
+  let current = 0;
+  let score = 0;
+  let correct = 0;
+  let playerName = '';
+
+  function selectCategory(btn, cat) {
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedCategory = cat;
+  }
+
+  function shuffle(arr) {
+    return arr.sort(() => Math.random() - 0.5);
+  }
+
+  function startGame() {
+    playerName = document.getElementById('player-name').value.trim() || 'Jugador';
+    let pool = selectedCategory === 'todas' ? [...allQuestions] : allQuestions.filter(q => q.category === selectedCategory);
+    questions = shuffle(pool).slice(0, 5);
+    current = 0; score = 0; correct = 0;
+    showScreen('screen-game');
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    const q = questions[current];
+    document.getElementById('question-counter').textContent = `Pregunta ${current+1}/${questions.length}`;
+    document.getElementById('score-counter').textContent = `Puntos: ${score}`;
+    document.getElementById('progress-fill').style.width = `${(current/questions.length)*100}%`;
+    document.getElementById('category-badge').textContent = q.category;
+    document.getElementById('difficulty-badge').textContent = q.difficulty;
+    document.getElementById('difficulty-badge').className = `badge badge-${q.difficulty.toLowerCase()}`;
+    document.getElementById('points-badge').textContent = `+${q.points} pts`;
+    document.getElementById('question-text').textContent = q.text;
+    document.getElementById('feedback').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = `${['A','B','C','D'][i]}) ${opt}`;
+      btn.onclick = () => answer(i);
+      container.appendChild(btn);
+    });
+  }
+
+  function answer(index) {
+    const q = questions[current];
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+    btns[q.correct].classList.add('correct');
+
+    const feedback = document.getElementById('feedback');
+    if (index === q.correct) {
+      btns[index].classList.add('correct');
+      score += q.points;
+      correct++;
+      feedback.textContent = `✔ ¡Correcto! +${q.points} puntos`;
+      feedback.className = 'feedback correct';
+    } else {
+      btns[index].classList.add('wrong');
+      feedback.textContent = `✘ Incorrecto. La respuesta era: ${q.options[q.correct]}`;
+      feedback.className = 'feedback wrong';
+    }
+    feedback.style.display = 'block';
+    document.getElementById('next-btn').style.display = 'block';
+    document.getElementById('score-counter').textContent = `Puntos: ${score}`;
+  }
+
+  function nextQuestion() {
+    current++;
+    if (current < questions.length) {
+      loadQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  function getRank(s) {
+    if (s >= 100) return '🏆 Maestro Trivia';
+    if (s >= 60)  return '⭐ Experto';
+    if (s >= 30)  return '📚 Aprendiz';
+    return '🌱 Novato';
+  }
+
+  function showResult() {
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('final-rank').textContent = getRank(score);
+    document.getElementById('stat-correct').textContent = correct;
+    document.getElementById('stat-total').textContent = questions.length;
+    document.getElementById('stat-accuracy').textContent = Math.round(correct/questions.length*100) + '%';
+    document.getElementById('progress-fill').style.width = '100%';
+    showScreen('screen-result');
+  }
+
+function restartGame() {
+    document.getElementById('player-name').value = '';
+    showScreen('screen-start');
+}
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+</script>
+</body>
+</html>
