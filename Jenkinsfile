@@ -18,8 +18,10 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
+                git(
+                    branch: 'main',
                     url: 'https://github.com/LuisaCardenas04/trivia-game-cicd.git'
+                )
             }
         }
 
